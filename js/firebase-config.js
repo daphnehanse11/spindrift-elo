@@ -8,12 +8,13 @@
 //   3. Publish js/../firestore.rules from the Firebase console (or CLI).
 //   4. Commit — GitHub Actions redeploys automatically.
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyAkF4sIwCn6e-da5HNrMmj3HyZQQg4sEOs",
+  authDomain: "spindrift-elo.firebaseapp.com",
+  projectId: "spindrift-elo",
+  storageBucket: "spindrift-elo.firebasestorage.app",
+  messagingSenderId: "113747691789",
+  appId: "1:113747691789:web:a8e085073aa4c97dc3c844",
+  measurementId: "G-6GXQER1JPE",
 };
 
 export function isFirebaseConfigured() {
