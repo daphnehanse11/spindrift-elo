@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can read and append to the global leaderboard.
+    match /globalELO/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Raw vote log — write-only-ish; readable for transparency.
+    match /votes/{voteId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Anonymous unique-visitor markers.
+    match /uniqueUsers/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

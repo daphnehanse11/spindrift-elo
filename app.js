@@ -39,6 +39,68 @@ function saveState() {
 let state = loadState();
 const byId = Object.fromEntries(FLAVORS.map((f) => [f.id, f]));
 
+// --- Backend (optional global leaderboard) ----------------------------------
+// Loaded lazily; the app is fully functional without it.
+
+const USER_KEY = "spindrift-user-id";
+function getUserId() {
+  let id = localStorage.getItem(USER_KEY);
+  if (!id) {
+    id = (crypto.randomUUID && crypto.randomUUID()) ||
+      "u-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(USER_KEY, id);
+  }
+  return id;
+}
+const USER_ID = getUserId();
+
+let fb = null;            // the firebase-service module, once loaded
+let globalReady = false;  // true once Firestore is connected
+let globalRatings = {};   // { flavorId: rating } cache for the live ranking
+let globalMeta = { totalVotes: 0, uniqueUsersCount: 0 };
+let boardMode = "personal"; // flips to "global" once the backend is ready
+
+function globalRating(id) {
+  return typeof globalRatings[id] === "number" ? globalRatings[id] : START_RATING;
+}
+
+async function initBackend() {
+  try {
+    fb = await import("./js/firebase-service.js");
+    const ok = await fb.initFirebase();
+    if (!ok) return;
+    const data = await fb.getGlobalELO();
+    if (!data) return;
+    globalRatings = {};
+    for (const f of FLAVORS) globalRatings[f.id] = globalRating(f.id);
+    for (const k in data) {
+      if (byId[k]) globalRatings[k] = data[k];
+    }
+    globalMeta.totalVotes = data.totalVotes || 0;
+    globalMeta.uniqueUsersCount = data.uniqueUsersCount || 0;
+    globalReady = true;
+    boardMode = "global";
+    document.getElementById("board-toggle").hidden = false;
+    if (activeTab === "rank") renderLeaderboard();
+  } catch (err) {
+    console.warn("Global leaderboard unavailable:", err);
+  }
+}
+
+function pushGlobalVote(winnerId, loserId) {
+  if (!globalReady) return;
+  const rw = globalRating(winnerId);
+  const rl = globalRating(loserId);
+  const nw = rw + K * (1 - expected(rw, rl));
+  const nl = rl + K * (0 - expected(rl, rw));
+  globalRatings[winnerId] = nw;
+  globalRatings[loserId] = nl;
+  globalMeta.totalVotes += 1;
+  // Fire-and-forget; failures fall back silently to local-only behavior.
+  fb.updateGlobalELO(winnerId, loserId, nw, nl, USER_ID);
+  fb.saveVote(USER_ID, winnerId, loserId);
+}
+
 // --- Elo --------------------------------------------------------------------
 
 function expected(a, b) {
@@ -184,6 +246,8 @@ function onVote(winnerId) {
   applyResult(winnerId, loserId);
   const delta = Math.round(state.flavors[winnerId].rating - before);
 
+  pushGlobalVote(winnerId, loserId);
+
   winnerEl.classList.add("winner");
   loserEl.classList.add("loser");
   showDelta(winnerEl, `+${delta}`);
@@ -208,26 +272,50 @@ function showDelta(cardEl, text) {
 
 const board = document.getElementById("board");
 
+const statEl = document.getElementById("board-stat");
+
 function renderLeaderboard() {
-  const ranked = FLAVORS.filter((f) => !isExcluded(f.id)).sort(
-    (a, b) => state.flavors[b.id].rating - state.flavors[a.id].rating
+  const global = boardMode === "global" && globalReady;
+
+  // Global view shows every flavor; personal view hides ones you've set aside.
+  const pool = global ? FLAVORS.slice() : FLAVORS.filter((f) => !isExcluded(f.id));
+  const ranked = pool.sort((a, b) =>
+    global
+      ? globalRating(b.id) - globalRating(a.id)
+      : state.flavors[b.id].rating - state.flavors[a.id].rating
   );
+
   board.innerHTML = ranked
     .map((f, i) => {
-      const s = state.flavors[f.id];
-      const games = s.wins + s.losses;
-      const wr = games ? Math.round((s.wins / games) * 100) : 0;
       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
+      const rating = global ? globalRating(f.id) : state.flavors[f.id].rating;
+      let meta = "";
+      if (!global) {
+        const s = state.flavors[f.id];
+        const games = s.wins + s.losses;
+        const wr = games ? Math.round((s.wins / games) * 100) : 0;
+        meta = `${s.wins}–${s.losses}${games ? ` · ${wr}%` : ""}`;
+      }
       return `
         <li class="row" style="--accent:${f.color}">
           <span class="rank">${medal}</span>
           <img class="row-can" src="${f.img}" alt="">
           <span class="row-name">${f.name}</span>
-          <span class="row-record">${s.wins}–${s.losses}${games ? ` · ${wr}%` : ""}</span>
-          <span class="row-rating">${Math.round(s.rating)}</span>
+          <span class="row-record">${meta}</span>
+          <span class="row-rating">${Math.round(rating)}</span>
         </li>`;
     })
     .join("");
+
+  if (global) {
+    const v = globalMeta.totalVotes.toLocaleString();
+    const u = globalMeta.uniqueUsersCount.toLocaleString();
+    statEl.textContent = `${v} votes from ${u} ${globalMeta.uniqueUsersCount === 1 ? "person" : "people"}`;
+    statEl.hidden = false;
+  } else {
+    statEl.textContent = `Based on your ${state.votes.toLocaleString()} votes on this device`;
+    statEl.hidden = false;
+  }
 
   renderExcluded();
 }
@@ -291,6 +379,18 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") onVote(current.right);
 });
 
+// Leaderboard mode toggle (Everyone / Your picks).
+document.querySelectorAll(".seg").forEach((b) =>
+  b.addEventListener("click", () => {
+    boardMode = b.dataset.mode;
+    document
+      .querySelectorAll(".seg")
+      .forEach((s) => s.classList.toggle("active", s.dataset.mode === boardMode));
+    renderLeaderboard();
+  })
+);
+
 // --- Go ---------------------------------------------------------------------
 
 renderMatchup();
+initBackend();

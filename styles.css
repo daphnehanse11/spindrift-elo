@@ -183,7 +183,29 @@ main { flex: 1; display: flex; flex-direction: column; align-items: center; padd
 .counter strong { color: var(--ink); }
 
 /* ---- Leaderboard ---- */
-.board-title { text-align: center; font-size: clamp(20px, 3.5vw, 26px); margin: 6px 0 18px; }
+.board-title { text-align: center; font-size: clamp(20px, 3.5vw, 26px); margin: 6px 0 10px; }
+.board-toggle {
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  padding: 4px;
+  border-radius: 999px;
+  width: max-content;
+  margin: 0 auto 6px;
+  box-shadow: var(--shadow);
+}
+.seg {
+  border: 0;
+  background: transparent;
+  padding: 7px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.seg.active { background: var(--ink); color: #fff; }
+.board-stat { text-align: center; color: rgba(15, 42, 67, 0.55); font-size: 13px; margin: 0 0 16px; }
 .board { list-style: none; margin: 0 auto; padding: 0; max-width: 620px; display: flex; flex-direction: column; gap: 8px; }
 .row {
   display: grid;
@@ -275,6 +297,17 @@ main { flex: 1; display: flex; flex-direction: column; align-items: center; padd
   cursor: pointer;
 }
 .reset:hover { background: #fff5f5; border-color: #ffb3b5; color: #ff5a5f; }
+.coffee {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+}
+.coffee:hover { background: #fff7e6; border-color: #f6c04a; }
 
 @media (max-width: 480px) {
   .card { border-radius: 20px; padding: 14px 8px 12px; }
