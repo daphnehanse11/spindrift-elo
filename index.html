@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spindrift Elo — rank every flavor</title>
+  <meta name="description" content="Settle it once and for all. Pick your favorite Spindrift flavor in head-to-head matchups and watch the Elo leaderboard take shape." />
+  <link rel="preconnect" href="https://cdn.shopify.com" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="drop">🌊</span>
+      <h1>Spindrift<span class="elo">Elo</span></h1>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="play">Match</button>
+      <button class="tab" data-tab="rank">Leaderboard</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-play" class="view">
+      <p class="prompt">Which would you rather drink?</p>
+      <div id="arena" class="arena"></div>
+      <p class="counter"><strong id="vote-count">0</strong> votes cast · use ← / → to pick</p>
+    </section>
+
+    <section id="view-rank" class="view" hidden>
+      <h2 class="board-title">The standings</h2>
+      <ol id="board" class="board"></ol>
+      <div id="excluded" class="excluded" hidden></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <button id="reset" class="reset">Reset ratings</button>
+    <span class="credit">Flavors &amp; cans © Spindrift · fan-made Elo, not affiliated</span>
+  </footer>
+
+  <script src="flavors.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
