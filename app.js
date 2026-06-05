@@ -64,6 +64,14 @@ function globalRating(id) {
   return typeof globalRatings[id] === "number" ? globalRatings[id] : START_RATING;
 }
 
+function setNetStatus(live) {
+  const el = document.getElementById("net-status");
+  if (!el) return;
+  el.textContent = live ? "🟢 Live · global rankings on" : "⚪ Local only";
+  el.classList.toggle("local", !live);
+  el.classList.toggle("live", live);
+}
+
 async function initBackend() {
   try {
     fb = await import("./js/firebase-service.js");
@@ -81,6 +89,7 @@ async function initBackend() {
     globalReady = true;
     boardMode = "global";
     document.getElementById("board-toggle").hidden = false;
+    setNetStatus(true);
     if (activeTab === "rank") renderLeaderboard();
   } catch (err) {
     console.warn("Global leaderboard unavailable:", err);

@@ -308,6 +308,15 @@ main { flex: 1; display: flex; flex-direction: column; align-items: center; padd
   color: var(--ink);
 }
 .coffee:hover { background: #fff7e6; border-color: #f6c04a; }
+.net-status {
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.net-status.local { background: #fff; color: rgba(15, 42, 67, 0.55); }
+.net-status.live { background: #eafbf0; color: #1f8a4c; border-color: #b6e6c6; }
 
 @media (max-width: 480px) {
   .card { border-radius: 20px; padding: 14px 8px 12px; }
